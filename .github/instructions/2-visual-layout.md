@@ -5,6 +5,7 @@
 ---
 
 ## Game Grid Layout
+
 ```
 ┌─────────────────────────────────────────┐
 │          TETRIS GAME                    │
@@ -30,6 +31,7 @@
 ```
 
 ## Canvas Specifications
+
 ```
 Grid Cell Size:        30 × 30 pixels
 Grid Width:            10 cells = 300 pixels
@@ -45,6 +47,7 @@ Total Game Window:     500 × 650 pixels (recommended)
 ```
 
 ## Spacing & Padding
+
 ```
 Grid Margin (from edge):   20 pixels
 Sidebar Margin:            15 pixels
@@ -55,6 +58,7 @@ Control Text:              10px
 ```
 
 ## Responsive Design
+
 ```
 Mobile (< 500px width):
   - Single column layout

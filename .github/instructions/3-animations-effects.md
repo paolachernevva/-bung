@@ -1,5 +1,9 @@
 # 3. Animation & Visual Effects
 
+**applyTo:** `app/animations/**`
+
+---
+
 ## Block Falling Animation
 ```
 Block Movement:

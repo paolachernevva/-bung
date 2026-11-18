@@ -1,5 +1,9 @@
 # 5. Sound Design & Audio Guidelines
 
+**applyTo:** `app/audio/**`
+
+---
+
 ## Audio File Specifications
 ```
 Format:        MP3 or WAV (MP3 recommended for web)

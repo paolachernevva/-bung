@@ -1,5 +1,9 @@
 # 4. Typography & UI Text Styling
 
+**applyTo:** `app/typography/**`
+
+---
+
 ## Font Choices
 ```
 Main Font (all text):  Arial, Helvetica, sans-serif

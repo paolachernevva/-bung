@@ -1,5 +1,9 @@
 # 1. Color Scheme & Tetrominoes Palette
 
+**applyTo:** `app/colors/**`
+
+---
+
 ## Standard Tetromino Colors
 Each block type has a specific color (matches official Tetris color scheme):
 

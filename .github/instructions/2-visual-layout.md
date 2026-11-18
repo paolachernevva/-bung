@@ -1,5 +1,9 @@
 # 2. Visual Layout & Grid Dimensions
 
+**applyTo:** `app/layout/**`
+
+---
+
 ## Game Grid Layout
 ```
 ┌─────────────────────────────────────────┐

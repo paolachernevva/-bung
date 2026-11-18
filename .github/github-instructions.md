@@ -1,412 +1,506 @@
 # Tetris Game - GitHub Instructions
 
-## Project Overview
-A web-based Tetris game built with **Python 3.12 backend** and **JavaScript frontend**. Classic Tetris mechanics with score tracking, difficulty levels, multiplayer support, animations, sound, and leaderboard.
-
-**Timeline**: Complete today
+## Overview
+This document contains 5 sets of visual and design instructions for the Tetris game project.
 
 ---
 
-## Table of Contents
-1. [Architecture](#architecture)
-2. [Technology Stack](#technology-stack)
-3. [Setup Instructions](#setup-instructions)
-4. [Development Workflow](#development-workflow)
-5. [Code Organization](#code-organization)
-6. [Game Features](#game-features)
-7. [Testing & Deployment](#testing--deployment)
+## 1. Color Scheme & Tetrominoes Palette
 
----
+### Standard Tetromino Colors
+Each block type has a specific color (matches official Tetris color scheme):
 
-## Architecture
-
-### Recommended Stack
-- **Backend**: Python 3.12 + FastAPI (lightweight, fast WebSocket support)
-- **Frontend**: Vanilla JavaScript + HTML5 Canvas (no build step needed)
-- **Communication**: WebSockets for real-time multiplayer
-- **Storage**: SQLite database (easiest setup)
-
-### System Design
 ```
-┌─────────────────┐
-│   Web Browser   │
-│  (JavaScript)   │
-│  - Render Game  │
-│  - Handle Input │
-└────────┬────────┘
-         │ WebSocket
-         │
-┌────────▼────────┐
-│  FastAPI Server │
-│  (Python 3.12)  │
-│  - Game Logic   │
-│  - Multiplayer  │
-│  - Scoring      │
-└────────┬────────┘
-         │
-┌────────▼────────┐
-│  SQLite DB      │
-│  - Leaderboard  │
-│  - Player Data  │
-└─────────────────┘
+I-Piece (Cyan/Light Blue)
+  Color: #00F0F0
+  RGB: (0, 240, 240)
+  Usage: 4 blocks in a line
+
+O-Piece (Yellow)
+  Color: #F0F000
+  RGB: (240, 240, 0)
+  Usage: 2×2 square
+
+T-Piece (Purple/Magenta)
+  Color: #A000F0
+  RGB: (160, 0, 240)
+  Usage: T-shape
+
+S-Piece (Green)
+  Color: #00F000
+  RGB: (0, 240, 0)
+  Usage: S-shape
+
+Z-Piece (Red)
+  Color: #F00000
+  RGB: (240, 0, 0)
+  Usage: Z-shape
+
+J-Piece (Blue)
+  Color: #0000F0
+  RGB: (0, 0, 240)
+  Usage: J-shape
+
+L-Piece (Orange)
+  Color: #F0A000
+  RGB: (240, 160, 0)
+  Usage: L-shape
 ```
 
----
-
-## Technology Stack
-
-### Backend (Python)
-- **FastAPI**: Modern web framework with WebSocket support
-- **Pydantic**: Data validation
-- **SQLAlchemy**: ORM for database
-- **SQLite**: Embedded database (no separate server needed)
-
-### Frontend (JavaScript)
-- **HTML5 Canvas**: Game rendering
-- **Vanilla JavaScript**: Game mechanics, input handling
-- **WebSocket API**: Real-time communication
-- **LocalStorage**: Browser-side score caching
-
-### Dependencies
+### UI Color Palette
 ```
-# Python requirements.txt
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==2.0.23
-websockets==12.0
-python-multipart==0.0.6
+Background:        #1a1a1a (Dark gray - game background)
+Grid Lines:        #333333 (Medium gray - borders between cells)
+Filled Cell:       Block color (from above)
+Empty Cell:        #0a0a0a (Very dark gray - empty space)
+Text (Primary):    #FFFFFF (White - main text, scores)
+Text (Secondary):  #CCCCCC (Light gray - labels)
+Highlight:         #FFD700 (Gold - for game over, high score)
+Shadow:            #000000 (Black - for depth/contrast)
 ```
 
----
+### Implementation Rules
+- ✅ Always use these exact colors for block types (for consistency across versions)
+- ✅ Blocks should be slightly smaller than their cell to show grid lines
+- ✅ Add dark shadow beneath blocks for 3D effect
+- ✅ Highlight currently falling piece with brighter outline
+- ✅ Use semi-transparent ghost piece (opacity 0.3) to show drop location
 
-## Setup Instructions
+### Code Example
+```javascript
+// In renderer.js
+const BLOCK_COLORS = {
+    'I': '#00F0F0',
+    'O': '#F0F000',
+    'T': '#A000F0',
+    'S': '#00F000',
+    'Z': '#F00000',
+    'J': '#0000F0',
+    'L': '#F0A000'
+};
 
-### Prerequisites
-- Python 3.12 installed
-- Node.js or npm (optional, not required)
-- Git
-
-### Step 1: Clone & Initialize
-```bash
-git clone <repository-url>
-cd tetris-game
-```
-
-### Step 2: Python Environment Setup
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate venv
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Step 3: Database Initialization
-```bash
-# Create database schema
-python scripts/init_db.py
-```
-
-### Step 4: Start Backend Server
-```bash
-# Run FastAPI server (auto-reload enabled)
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Step 5: Open Frontend
-```
-Open browser to: http://localhost:8000
-(HTML served by FastAPI)
+const UI_COLORS = {
+    background: '#1a1a1a',
+    gridLines: '#333333',
+    emptyCell: '#0a0a0a',
+    text: '#FFFFFF',
+    highlight: '#FFD700'
+};
 ```
 
 ---
 
-## Development Workflow
+## 2. Visual Layout & Grid Dimensions
 
-### Folder Structure
+### Game Grid Layout
 ```
-tetris-game/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                 # FastAPI app entry
-│   ├── game/
-│   │   ├── __init__.py
-│   │   ├── logic.py            # Tetris game mechanics
-│   │   ├── models.py           # Game state models
-│   │   └── multiplayer.py      # Multiplayer logic
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── models.py           # SQLAlchemy models
-│   │   └── crud.py             # Database operations
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── routes.py           # API endpoints
-│   │   └── websockets.py       # WebSocket handlers
-│   └── static/
-│       ├── index.html          # Main game page
-│       ├── css/
-│       │   └── style.css       # Game styling
-│       └── js/
-│           ├── game.js         # Game logic
-│           ├── renderer.js     # Canvas rendering
-│           ├── input.js        # Keyboard/touch input
-│           ├── audio.js        # Sound effects
-│           └── multiplayer.js  # Multiplayer client
-├── scripts/
-│   ├── init_db.py              # Database initialization
-│   └── seed_data.py            # Populate test data
-├── tests/
-│   ├── test_game_logic.py
-│   ├── test_api.py
-│   └── test_multiplayer.py
-├── requirements.txt            # Python dependencies
-├── .gitignore
-├── README.md
-└── github-instructions.md      # This file
+┌─────────────────────────────────────────┐
+│          TETRIS GAME                    │
+├─────────────────────────────────────────┤
+│                                         │
+│         MAIN GAME GRID                  │
+│         (10 cells wide)                 │
+│         (20 cells tall)                 │
+│                                         │
+│         Currently Falling Block          │
+│         [with rotation preview]          │
+│                                         │
+├──────────────┬──────────────────────────┤
+│ NEXT PIECE   │  SCORE: 1,250            │
+│ PREVIEW      │  LEVEL: 2                │
+│              │  LINES: 5                │
+│              │                          │
+│              │  [HIGH SCORE: 5,420]     │
+│              │                          │
+├──────────────┴──────────────────────────┤
+│  Controls: ← → ↑ SPACE  |  PAUSE/QUIT   │
+└─────────────────────────────────────────┘
 ```
 
-### Git Workflow
-```bash
-# Create feature branch
-git checkout -b feature/game-mechanics
+### Canvas Specifications
+```
+Grid Cell Size:        30 × 30 pixels
+Grid Width:            10 cells = 300 pixels
+Grid Height:           20 cells = 600 pixels
+Total Canvas:          300 × 600 pixels (minimum)
 
-# Make changes and commit
-git add .
-git commit -m "Implement piece rotation and collision detection"
+Block Size:            28 × 28 pixels (2px margin)
+Grid Line Width:       1 pixel
+Block Border:          2 pixels
 
-# Push and create PR
-git push origin feature/game-mechanics
+UI Sidebar Width:      200 pixels (optional, for next piece + stats)
+Total Game Window:     500 × 650 pixels (recommended)
 ```
 
----
+### Spacing & Padding
+```
+Grid Margin (from edge):   20 pixels
+Sidebar Margin:            15 pixels
+Text Line Height:          1.5
+Score Display Font:        18px
+Label Font:                12px
+Control Text:              10px
+```
 
-## Game Features
+### Responsive Design
+```
+Mobile (< 500px width):
+  - Single column layout
+  - Grid smaller (20 × 20px cells)
+  - Sidebar below game grid
+  - Touch controls (buttons instead of keyboard)
 
-### 1. Core Mechanics
-- [x] 7 Tetromino pieces (I, O, T, S, Z, J, L)
-- [x] Grid-based movement (left, right, down, rotate)
-- [x] Collision detection
-- [x] Line clearing with animation
-- [x] Game over detection
+Tablet (500px - 1200px):
+  - Two column layout
+  - Grid normal size (30 × 30px)
+  - Sidebar to the right
 
-### 2. Scoring System
-- Points for line clears (100 points per line)
-- Bonus for multiple lines (Tetris = 400 points)
-- Difficulty increases with score
-
-### 3. Game Modes
-- **Classic**: Single player, increasing difficulty
-- **Multiplayer**: Real-time vs other players
-- **Time Attack**: Clear as many lines as possible in 2 minutes
-
-### 4. Visual Features
-- Smooth animations
-- Next piece preview
-- Hold piece (store one piece)
-- Ghost piece (shows where piece will land)
-
-### 5. Audio
-- Background music (looped, volume control)
-- Line clear sound effect
-- Game over sound
-
-### 6. Leaderboard
-- Top 10 high scores (stored in database)
-- Player name, score, date
-- Display on game over screen
-
----
-
-## Code Guidelines
-
-### Python Code Style
-- Use PEP 8 (checked with `flake8`)
-- Type hints for all functions
-- Docstrings for classes and complex methods
-- Maximum line length: 100 characters
-
-### JavaScript Code Style
-- Use ES6+ syntax
-- Descriptive variable names (avoid single letters)
-- Comments for complex logic
-- Use `const` by default, `let` for mutations, avoid `var`
-
-### Example: Game Logic Structure
-```python
-# app/game/logic.py
-from typing import List, Tuple
-from app.game.models import GameState, Piece
-
-class TetrisGame:
-    """Manages Tetris game state and logic"""
-    
-    def __init__(self):
-        self.grid = [[0 for _ in range(10)] for _ in range(20)]
-        self.current_piece = None
-        self.score = 0
-    
-    def move_piece(self, direction: str) -> bool:
-        """Move current piece left/right/down"""
-        pass
-    
-    def rotate_piece(self) -> bool:
-        """Rotate current piece 90 degrees"""
-        pass
-    
-    def check_collision(self, piece: Piece) -> bool:
-        """Check if piece collides with walls/grid"""
-        pass
-    
-    def clear_lines(self) -> int:
-        """Clear completed lines, return count"""
-        pass
+Desktop (> 1200px):
+  - Centered layout
+  - Grid normal size
+  - Sidebar to the right with extra info
 ```
 
 ---
 
-## API Endpoints
+## 3. Animation & Visual Effects
 
-### REST Endpoints
+### Block Falling Animation
 ```
-GET  /                      # Serve game page
-GET  /api/leaderboard       # Get top 10 scores
-POST /api/scores            # Submit new score
-GET  /api/game-state        # Get current game state
-```
+Block Movement:
+- Smooth drop (each row takes 50ms to animate)
+- No jerky movement
+- Constant speed during fall
 
-### WebSocket Endpoints
-```
-WS /ws/game/{player_id}     # Single player game
-WS /ws/multiplayer/{room_id} # Multiplayer game
-```
+Falling Block Effect:
+- Shadow beneath block (5px darker)
+- Slight glow on current piece (outline 1px brighter)
+- Ghost piece always visible (semi-transparent, 30% opacity)
 
----
-
-## Testing & Validation
-
-### Run Tests
-```bash
-# Run all tests
-pytest
-
-# Run specific test file
-pytest tests/test_game_logic.py
-
-# With coverage
-pytest --cov=app tests/
+Speed Reference:
+- Level 0: Block falls 1 row every 500ms
+- Level 1: Block falls 1 row every 450ms
+- Level 2: Block falls 1 row every 400ms
+- Level 3+: Block falls 1 row every 350ms (minimum 100ms)
 ```
 
-### Manual Testing Checklist
-- [ ] Pieces spawn and fall correctly
-- [ ] Left/right movement works
-- [ ] Rotation works without clipping
-- [ ] Collision detection works (walls, floor, other pieces)
-- [ ] Lines clear when filled
-- [ ] Score updates correctly
-- [ ] Game over triggers at right time
-- [ ] Multiplayer sync is smooth
-- [ ] Leaderboard displays correctly
-- [ ] Sound plays without lag
-- [ ] Mobile/touch input works (if applicable)
+### Line Clear Animation
+```
+Step 1: Highlight (200ms)
+  - Selected row blinks (alternates between color and black)
+  - Play line-clear sound
 
-### Browser Compatibility
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
+Step 2: Clear (300ms)
+  - Row fades out
+  - Particle effect (optional): small blocks scatter
 
----
+Step 3: Drop (400ms)
+  - Rows above slide down smoothly
+  - Blocks accelerate slightly for realism
 
-## Deployment
-
-### Local Development
-```bash
-# Terminal 1: Start backend
-uvicorn app.main:app --reload
-
-# Terminal 2: Open browser
-# http://localhost:8000
+Total Duration: ~900ms before next piece spawns
 ```
 
-### Production (Render, Heroku, etc.)
-1. Add `Procfile`:
-   ```
-   web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-   ```
-
-2. Deploy:
-   ```bash
-   git push heroku main
-   ```
-
----
-
-## Contributing Guidelines
-
-### Before Submitting Code
-1. Follow code style guidelines (PEP 8 for Python, ES6 for JS)
-2. Write tests for new features
-3. Run all tests: `pytest`
-4. Update README if needed
-5. Ensure no console errors in browser DevTools
-
-### Commit Message Format
+### Rotation Animation
 ```
-[Feature/Fix/Refactor] Brief description
+Rotation Effect:
+- Block rotates 90° clockwise instantly (no animation needed)
+- Quick visual feedback (highlight the block briefly)
+- If wall-kick occurs: block "bounces" 1-2 pixels left/right
 
-- Detailed explanation of changes
-- Any breaking changes
-- Related issue/feature number
+Ghost Piece Update:
+- Ghost updates instantly with rotation
+- Helps player see where rotated piece will land
+```
+
+### Game Over Animation
+```
+Step 1: Stop (immediate)
+  - Current piece locks
+  - No new pieces spawn
+
+Step 2: Flash (1 second)
+  - Game grid flashes 3 times
+  - Entire grid turns highlight color (#FFD700)
+
+Step 3: Slide (500ms)
+  - Stacked blocks "settle" down with gravity
+  - Each block drops a bit further (visual effect)
+
+Step 4: Display Score (500ms)
+  - Final score slides up from bottom
+  - "GAME OVER" text fades in
+  - Option to play again or view leaderboard
+```
+
+### Visual Feedback for User Actions
+```
+Button Press Effects:
+- Move Left/Right: Block slides smoothly 20px
+- Rotate: Block rotates with highlight
+- Drop: Piece accelerates falling
+- Pause: Game dims (opacity 0.5), pause menu appears
+
+Sound Effects:
+- Move: Soft beep (100ms, low frequency)
+- Rotate: Click sound (50ms)
+- Line Clear: Ascending tone (500ms)
+- Game Over: Descending tone (800ms)
+- Background: Looping music (adjustable volume)
 ```
 
 ---
 
-## Troubleshooting
+## 4. Typography & UI Text Styling
 
-### Backend Won't Start
-```bash
-# Check Python version
-python --version  # Should be 3.12.x
+### Font Choices
+```
+Main Font (all text):  Arial, Helvetica, sans-serif
+Monospace (for code):  Courier New, monospace
 
-# Reinstall dependencies
-pip install -r requirements.txt --force-reinstall
-
-# Check port 8000 isn't in use
-lsof -i :8000  # macOS/Linux
-netstat -ano | findstr :8000  # Windows
+Fallback fonts: Arial → Helvetica → sans-serif
+System Font Option:   -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
 ```
 
-### Game Doesn't Render
-```bash
-# Check browser console for errors (F12)
-# Verify WebSocket connection in Network tab
-# Check server logs for errors
+### Text Sizing & Styling
+
+#### Game Title
+```
+Font Size:       48px
+Font Weight:     Bold
+Color:           #FFFFFF
+Text Shadow:     2px 2px 4px #000000
+Margin Bottom:   20px
+Letter Spacing:  2px
 ```
 
-### Database Errors
-```bash
-# Reset database
-rm database.db
-python scripts/init_db.py
+#### Score Display
+```
+Font Size:       24px
+Font Weight:     Bold
+Color:           #FFFFFF
+Prefix Label:    "SCORE:" (12px, gray)
+Value:           "1,250" (24px, yellow highlight on match)
+```
+
+#### Level & Lines Cleared
+```
+Font Size:       18px
+Font Weight:     Normal
+Color:           #CCCCCC
+Format:          "Level: 2" / "Lines: 5"
+```
+
+#### Next Piece Label
+```
+Font Size:       14px
+Font Weight:     Bold
+Color:           #FFFFFF
+Uppercase:       "NEXT PIECE"
+```
+
+#### Control Instructions
+```
+Font Size:       10px
+Font Weight:     Normal
+Color:           #999999
+Text:            "← → = Move  |  ↑ = Rotate  |  SPACE = Drop"
+Opacity:         0.7 (less prominent)
+```
+
+#### Game Over Screen
+```
+"GAME OVER" Text:
+  Font Size:     64px
+  Font Weight:   Bold
+  Color:         #FFD700 (gold)
+  Text Shadow:   3px 3px 8px #000000
+
+Final Score:
+  Font Size:     32px
+  Color:         #FFFFFF
+  Margin Top:    20px
+```
+
+### Button Styling
+```
+Buttons (Play Again, Leaderboard, Quit):
+
+Default State:
+  - Background: #333333
+  - Text Color: #FFFFFF
+  - Border: 2px solid #CCCCCC
+  - Padding: 10px 20px
+  - Border Radius: 5px
+  - Font Size: 14px
+
+Hover State:
+  - Background: #555555
+  - Border: 2px solid #FFD700
+  - Cursor: pointer
+  - Box Shadow: 0 0 10px rgba(255, 215, 0, 0.5)
+
+Active/Pressed State:
+  - Background: #666666
+  - Border: 2px solid #FFFFFF
+  - Transform: scale(0.95)
 ```
 
 ---
 
-## Resources
+## 5. Sound Design & Audio Guidelines
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
-- [HTML5 Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
-- [SQLAlchemy ORM](https://docs.sqlalchemy.org/)
+### Audio File Specifications
+```
+Format:        MP3 or WAV (MP3 recommended for web)
+Sample Rate:   44.1 kHz or 48 kHz
+Bit Depth:     16-bit
+Channels:      Mono (most effects), Stereo (music)
+Compression:   128 kbps (MP3) for web optimization
+```
+
+### Sound Effects Library
+
+#### 1. Background Music (Looping)
+```
+File Name:     game_music.mp3
+Duration:      1-2 minutes (loops)
+Volume Level:  60% (default, adjustable)
+Tone:          Upbeat, 8-bit retro Tetris style
+Fade In:       2 seconds (when game starts)
+Fade Out:      1 second (when game pauses/ends)
+Frequency:     110-220 Hz range (keep it cheerful)
+```
+
+#### 2. Line Clear Sound
+```
+File Name:     line_clear.mp3
+Duration:      500ms
+Volume Level:  70%
+Tone:          Ascending beep (C-D-E notes, 262-330 Hz)
+Trigger:       When 1+ rows cleared
+Multiple Lines: Play same sound, slightly higher pitch each time
+```
+
+#### 3. Game Over Sound
+```
+File Name:     game_over.mp3
+Duration:      800ms
+Volume Level:  75%
+Tone:          Descending tone (E-C-G, minor key, sad)
+Frequency:     100-200 Hz range
+Trigger:       When game ends (block reaches top)
+```
+
+#### 4. Rotation Sound (Optional)
+```
+File Name:     rotate.mp3
+Duration:      50ms
+Volume Level:  40%
+Tone:          Quick "click" or "pop"
+Frequency:     500-800 Hz
+Trigger:       When player rotates block
+```
+
+#### 5. Movement Sound (Optional)
+```
+File Name:     move.mp3
+Duration:      30ms
+Volume Level:  30%
+Tone:          Soft beep
+Frequency:     300-400 Hz
+Trigger:       When player moves block left/right
+```
+
+### Audio Implementation Code
+```javascript
+// In audio.js
+const AUDIO = {
+    backgroundMusic: new Audio('sounds/game_music.mp3'),
+    lineClear: new Audio('sounds/line_clear.mp3'),
+    gameOver: new Audio('sounds/game_over.mp3'),
+    rotate: new Audio('sounds/rotate.mp3'),
+    move: new Audio('sounds/move.mp3')
+};
+
+// Background music loops
+AUDIO.backgroundMusic.loop = true;
+AUDIO.backgroundMusic.volume = 0.6;
+
+// Sound effects play once
+function playLineSound() {
+    AUDIO.lineClear.currentTime = 0;
+    AUDIO.lineClear.play();
+}
+
+// Volume control
+function setVolume(percent) {
+    Object.values(AUDIO).forEach(audio => {
+        audio.volume = (percent / 100) * 0.7; // Max 70%
+    });
+}
+
+// Mute button
+function toggleMute() {
+    Object.values(AUDIO).forEach(audio => {
+        audio.muted = !audio.muted;
+    });
+}
+```
+
+### Audio Guidelines
+- ✅ All sounds should be non-intrusive (players can focus on game)
+- ✅ Background music volume should be 60% (can be adjusted)
+- ✅ Sound effects should be clear but not overpowering
+- ✅ Provide mute button for accessibility
+- ✅ Test on different devices (some have different speaker quality)
+- ✅ Avoid loud sudden noises (startled players = bad experience)
+- ✅ Use retro 8-bit style sounds (matches classic Tetris feel)
+
+### Volume Levels (Recommended)
+```
+Background Music:    60% default
+Line Clear Sound:    70% default
+Game Over Sound:     75% default
+Rotation Sound:      40% default
+Movement Sound:      30% default
+Master Volume:       100% default (player adjustable)
+```
 
 ---
 
-## Questions or Issues?
-Open a GitHub issue or check the troubleshooting section above.
+## Summary of All 5 Instruction Sets
 
-**Let's build Tetris! 🎮**
+| Set | Purpose | Key Content |
+|-----|---------|------------|
+| 1. Colors & Palette | Define block colors and UI colors | 7 tetromino colors, background, text colors |
+| 2. Layout & Dimensions | Game grid and UI layout | Canvas size, spacing, responsive design |
+| 3. Animations & Effects | Visual feedback and animations | Falling, line clear, rotation, game over effects |
+| 4. Typography & UI | Text styling and buttons | Font sizes, colors, button states |
+| 5. Sound Design | Audio guidelines | Sound files, volumes, frequencies, implementation |
+
+---
+
+## Implementation Checklist
+
+When building the Tetris game, refer to these instructions:
+
+**Phase 1-2 (Backend):**
+- Use colors from Set 1 when defining block types
+- Reference dimensions from Set 2
+
+**Phase 5 (Frontend - Rendering):**
+- Apply all colors from Set 1
+- Use grid dimensions from Set 2
+- Implement animations from Set 3
+- Apply typography from Set 4
+
+**Phase 7 (Sound & Polish):**
+- Implement audio from Set 5
+- Refine all animations from Set 3
+- Polish UI text from Set 4
+
+---
+
+## Questions?
+Refer to these 5 instruction sets when designing and building the visual/audio aspects of the Tetris game!
